@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
 from utils import load_dataset, get_device, evaluate_model, save_model
+import matplotlib.pyplot as plt
+
 
 # ====================== INSTÄLLNINGAR ======================
 DATASET_PATH = "dataset"
@@ -44,6 +46,9 @@ optimizer = optim.Adam(
 )
 
 best_val_acc = 0.0
+train_accs = []
+val_accs = []
+losses = []
 
 for epoch in range(EPOCHS):
     # Träningsloop
@@ -82,6 +87,9 @@ for epoch in range(EPOCHS):
             val_total += labels.size(0)
 
     val_acc = 100 * val_correct / val_total
+    train_accs.append(train_acc)
+    val_accs.append(val_acc)
+    losses.append(running_loss/len(train_loader))
 
     # Spara bästa modellen
     if val_acc > best_val_acc:
@@ -92,6 +100,27 @@ for epoch in range(EPOCHS):
           f"Loss: {running_loss/len(train_loader):.4f} — "
           f"Train Acc: {train_acc:.2f}% — "
           f"Val Acc: {val_acc:.2f}%")
+plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 2, 1)
+plt.plot(train_accs, label='Train Accuracy')
+plt.plot(val_accs, label='Val Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy (%)')
+plt.title('VGG16 - Accuracy')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(losses, label='Train Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('VGG16 - Loss')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig('vgg16_training.png')
+plt.close()
+print("Graf sparad som vgg16_training.png")
 
 # ====================== UTVÄRDERING ======================
 print(f"\nBästa valideringsnoggranhet: {best_val_acc:.2f}%")

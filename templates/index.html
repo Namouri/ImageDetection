@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekobot — Verktygstips Status</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            padding: 30px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #1F4E79;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #595959;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        button {
+            padding: 10px 24px;
+            background: #2E74B5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #1F4E79; }
+
+        /* Sammanfattningsrad */
+        .summary {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 16px 20px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .summary-card .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .summary-card .label {
+            font-size: 13px;
+            color: #595959;
+            margin-top: 4px;
+        }
+
+        .green { color: #27ae60; }
+        .orange { color: #f39c12; }
+        .red { color: #e74c3c; }
+
+        /* Grid med armkort */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-3px); }
+
+        .card.intakta { border-top: 5px solid #27ae60; }
+        .card.defekta { border-top: 5px solid #f39c12; }
+        .card.avlossnade { border-top: 5px solid #e74c3c; }
+        .card.okänd { border-top: 5px solid #bdc3c7; }
+
+        .emoji { font-size: 36px; margin-bottom: 10px; }
+        .arm-name { font-weight: bold; font-size: 16px; color: #1F4E79; }
+        .arm-status { font-size: 14px; margin-top: 6px; text-transform: capitalize; }
+        .arm-confidence { font-size: 12px; color: #888; margin-top: 4px; }
+
+        /* Laddningsindikator */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 16px;
+        }
+
+        /* Varningsbanderoll */
+        .alert-banner {
+            background: #fdf3cd;
+            border: 1px solid #f39c12;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-banner.visible { display: block; }
+        .alert-banner p { color: #856404; font-weight: bold; }
+
+        /* Tidsstämpel */
+        .timestamp {
+            text-align: right;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>🤖 Ekobot — Verktygstips Status</h1>
+            <p class="subtitle">Realtidsövervakning av robotarmar</p>
+        </div>
+        <button onclick="loadStatus()">🔄 Uppdatera status</button>
+    </header>
+
+    <!-- Varningsbanderoll -->
+    <div class="alert-banner" id="alertBanner">
+        <p>⚠️ Skadade verktygstips hittades! Kontrollera markerade armar.</p>
+    </div>
+
+    <!-- Sammanfattning -->
+    <div class="summary">
+        <div class="summary-card">
+            <div class="number" id="totalCount">—</div>
+            <div class="label">Totalt antal armar</div>
+        </div>
+        <div class="summary-card">
+            <div class="number green" id="intaktCount">—</div>
+            <div class="label">Intakta</div>
+        </div>
+        <div class="summary-card">
+            <div class="number orange" id="defektCount">—</div>
+            <div class="label">Defekta</div>
+        </div>
+        <div class="summary-card">
+            <div class="number red" id="avlossnatCount">—</div>
+            <div class="label">Avlossnade</div>
+        </div>
+    </div>
+
+    <!-- Tidsstämpel -->
+    <div class="timestamp" id="timestamp"></div>
+
+    <!-- Armgrid -->
+    <div class="grid" id="grid">
+        <div class="loading">Laddar status...</div>
+    </div>
+
+    <script>
+        function loadStatus() {
+            document.getElementById('grid').innerHTML =
+                '<div class="loading">🔄 Hämtar status...</div>';
+
+            fetch('/api/status')
+                .then(res => res.json())
+                .then(data => {
+                    const grid = document.getElementById('grid');
+                    grid.innerHTML = '';
+
+                    let intakt = 0, defekt = 0, avlossnat = 0;
+
+                    for (const [arm, result] of Object.entries(data)) {
+                        const cls = result.class;
+
+                        // Räkna per klass
+                        if (cls === 'intakta') intakt++;
+                        else if (cls === 'defekta') defekt++;
+                        else if (cls === 'avlossnade') avlossnat++;
+
+                        // Välj emoji
+                        const emoji =
+                            cls === 'intakta'    ? '✅' :
+                            cls === 'defekta'    ? '⚠️' :
+                            cls === 'avlossnade' ? '❌' : '❓';
+
+                        grid.innerHTML += `
+                            <div class="card ${cls}">
+                                <div class="emoji">${emoji}</div>
+                                <div class="arm-name">${arm}</div>
+                                <div class="arm-status">${cls}</div>
+                                <div class="arm-confidence">
+                                    Säkerhet: ${result.confidence}%
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Uppdatera sammanfattning
+                    const total = intakt + defekt + avlossnat;
+                    document.getElementById('totalCount').textContent = total;
+                    document.getElementById('intaktCount').textContent = intakt;
+                    document.getElementById('defektCount').textContent = defekt;
+                    document.getElementById('avlossnatCount').textContent = avlossnat;
+
+                    // Visa varningsbanderoll om det finns skador
+                    const banner = document.getElementById('alertBanner');
+                    if (defekt > 0 || avlossnat > 0) {
+                        banner.classList.add('visible');
+                    } else {
+                        banner.classList.remove('visible');
+                    }
+
+                    // Uppdatera tidsstämpel
+                    const now = new Date();
+                    document.getElementById('timestamp').textContent =
+                        `Senast uppdaterad: ${now.toLocaleString('sv-SE')}`;
+                })
+                .catch(err => {
+                    document.getElementById('grid').innerHTML =
+                        '<div class="loading">❌ Kunde inte hämta status. Försök igen.</div>';
+                });
+        }
+
+        // Ladda automatiskt vid start
+        loadStatus();
+    </script>
+
+</body>
+</html>

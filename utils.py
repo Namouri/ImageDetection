@@ -1,6 +1,6 @@
 import torch
 from torchvision import datasets
-from torch.utils.data import DataLoader, random_spilt
+from torch.utils.data import DataLoader, random_split
 from sklearn.metrics import classification_report, confusion_matrix
 from augmentation import get_train_transform, get_val_transform
 import copy
@@ -25,7 +25,7 @@ def load_dataset(dataset_path, batch_size=32):
     val_size = int(0.1 * total)
     test_size = total - train_size - val_size
 
-    train_dataset, val_dataset, test_dataset = random_spilt(
+    train_dataset, val_dataset, test_dataset = random_split(
         full_dataset,
         [train_size, val_size, test_size],
         generator=torch.Generator().manual_seed(42),
