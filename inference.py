@@ -52,16 +52,15 @@ def classify_image(model, image_path):
     }
 
 # ====================== KLASSIFICERA ALLA ARMAR ======================
+GLOBAL_MODEL= load_model()
 def classify_all_arms(image_folder):
-    model = load_model()
+    # Use global model to save time/memory
     results = {}
-
-    print("\n===== KLASSIFICERINGSRESULTAT =====")
 
     for camera_id in range(1, NUM_CAMERAS + 1):
         arm_name = f"Arm {camera_id}"
 
-        # Hitta senaste bilden från denna kamera
+        # Find latest image
         camera_images = sorted([
             f for f in os.listdir(image_folder)
             if f.startswith(f"camera{camera_id}_")
@@ -69,46 +68,25 @@ def classify_all_arms(image_folder):
         ])
 
         if not camera_images:
-            # Ingen bild hittad för denna kamera
-            results[arm_name] = {
-                'class': 'okänd',
-                'confidence': 0.0,
-                'camera_id': camera_id
-            }
-            print(f"{arm_name}: ❓ Ingen bild hittad")
+            results[arm_name] = {'class': 'unknown', 'confidence': 0.0}
             continue
 
-        # Använd senaste bilden
         latest_image = os.path.join(image_folder, camera_images[-1])
-        result = classify_image(model, latest_image)
-        result['camera_id'] = camera_id
+        result = classify_image(GLOBAL_MODEL, latest_image)
+
+        # MANDATORY MAPPING FOR FRONTEND
+        if result['class'] == 'intakta':
+            result['class'] = 'ok'
+        elif result['class'] == 'defekta':
+            result['class'] = 'damaged'
+        # 'avlossnade' remains as is
 
         results[arm_name] = result
 
-        # Välj status
-        if result['class'] == 'intakta':
-            status = "✅ Intakt"
-        elif result['class'] == 'defekta':
-            status = "⚠️ Defekt"
-        elif result['class'] == 'avlossnade':
-            status = "❌ Avlossnat"
-        else:
-            status = "❓ Okänd"
-
-        print(f"{arm_name} (Kamera {camera_id}): {status} "
-              f"(Säkerhet: {result['confidence']}%)")
-
-    # Hitta skadade armar
-    damaged_arms = {
-        arm: result for arm, result in results.items()
-        if result['class'] != 'intakta'
-    }
-
-    if damaged_arms:
-        print(f"\n⚠️ VARNING: {len(damaged_arms)} skadade tips hittades!")
-        send_alert(damaged_arms)
-    else:
-        print("\n✅ Alla tips är intakta!")
+    # Alert logic
+    damaged_list = {k: v for k, v in results.items() if v['class'] in ['damaged', 'avlossnade']}
+    if damaged_list:
+        send_alert(damaged_list)
 
     return results
 
