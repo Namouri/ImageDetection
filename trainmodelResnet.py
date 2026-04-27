@@ -44,9 +44,9 @@ def build_dataloaders(data_dir: str, batch_size: int, img_size: int):
     )
  
     train_loader = DataLoader(train_dataset, batch_size=batch_size,
-                              shuffle=True, num_workers=4, pin_memory=True)
+                              shuffle=True, num_workers=0, pin_memory=False)
     val_loader   = DataLoader(val_dataset,   batch_size=batch_size,
-                              shuffle=False, num_workers=4, pin_memory=True)
+                              shuffle=False, num_workers=0, pin_memory=False)
  
     print(f"\nClasses : {train_dataset.classes}")
     print(f"Train   : {len(train_dataset)} images")
@@ -59,6 +59,8 @@ def train(model, train_loader, val_loader, criterion, optimizer,
  
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
+    history = {"train_loss": [], "val_loss": [], "train_acc": [], "val_acc": []}  # ADD THIS
+
  
     for epoch in range(1, epochs + 1):
         print(f"Epoch {epoch}/{epochs}  " + "─" * 40)
@@ -88,6 +90,10 @@ def train(model, train_loader, val_loader, criterion, optimizer,
             epoch_loss = running_loss / len(loader.dataset)
             epoch_acc  = running_correct / len(loader.dataset)
             print(f"  {phase:5s}  loss={epoch_loss:.4f}  acc={epoch_acc:.4f}")
+            history[f"{phase}_loss"].append(epoch_loss)
+            history[f"{phase}_acc"].append(epoch_acc)
+
+
  
             if phase == "val" and epoch_acc > best_acc:
                 best_acc = epoch_acc
@@ -97,6 +103,12 @@ def train(model, train_loader, val_loader, criterion, optimizer,
  
         if scheduler:
             scheduler.step()
+        
+    import json
+    log_path = args.save_path.replace(".pth", "_history.json")
+    with open(log_path, "w") as f:
+        json.dump(history, f, indent=2)
+    print(f"\nTraining history saved to {log_path}")
  
     print(f"\nBest validation accuracy: {best_acc:.4f}")
     model.load_state_dict(best_model_wts)
@@ -159,6 +171,7 @@ def main():
                   criterion, optimizer, scheduler,
                   device, args.epochs, args.save_path)
  
+
     # Quick smoke-test on a single image (optional)
     # label, conf = predict(model, "test.jpg", classes, device)
     # print(f"\nPrediction: {label}  ({conf*100:.1f}% confidence)")
