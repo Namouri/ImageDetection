@@ -16,8 +16,8 @@ NUM_CAMERAS = 12  # Ändra till 9 eller 12
 # ====================== LADDA MODELL ======================
 def load_model():
     model = models.resnet50()
-    model.classifier[1] = nn.Linear(
-        model.classifier[1].in_features,
+    model.fc = nn.Linear(
+        model.fc.in_features,
         len(CLASS_NAMES)
     )
     model.load_state_dict(
