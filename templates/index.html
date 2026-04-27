@@ -7,9 +7,9 @@
         :root {
             --ok:#639922;
             --damaged:#E24B4A;
-            --lost:#444441;
+            --lost:#1a1a1a;
             --unknown:#888780;
-            --brand:#95d596;
+            --brand:#ffffff;
         }
         
         /* FULL SCREEN & LAYOUT */
@@ -17,7 +17,8 @@
             height: 100%; 
             margin: 0; 
             padding: 0; 
-            background: #8e8f90; 
+            background: linear-gradient(to right, #232527, #505750);
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -68,17 +69,17 @@
         /* MAIN ILLUSTRATION (BIGGER) */
         .chip-wrap { display:inline-flex; flex-direction:column; align-items:center; max-width: 95vw; }
         .chip-body { 
-            background:var(--brand); 
+            background:#ffffff; 
+            border: 2px solid #eee;
             border-radius:15px; 
             padding:40px 0; /* Taller body */
             display:flex; 
             align-items:center; 
             justify-content:center; 
             transition: width 0.3s ease; 
-            box-shadow: 0 10px 20px rgba(157, 248, 192, 0.2);
-        }
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); /* Softened the shadow */        }
         
-        .chip-logo-img { height: 70px; width: auto; filter: brightness(0) invert(1); }
+        .chip-logo-img { height: 70px; width: auto;}
 
         .pins-row { display:flex; align-items:flex-start; margin-top: -2px; }
         
@@ -86,9 +87,9 @@
         .pin { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition: transform 0.2s; }
         .pin:hover { transform: translateY(5px); }
         
-        .pin-stem { width: 18px; height: 70px; background: #ddd; border-radius:0 0 4px 4px; transition:background .3s; }
-        .pin-foot { width: 28px; height: 16px; background: #ccc; border-radius:0 0 6px 6px; transition:background .3s; margin-top: -1px; }
-        .pin-num { font-size:16px; font-family: 'Courier New', Courier, monospace; margin-top:12px; font-weight: bold; color: #555; }
+        .pin-stem { width: 18px; height: 70px; background:var(--unknown); border-radius:0 0 4px 4px; transition:background .3s; }
+        .pin-foot { width: 28px; height: 16px; background: var(--unknown); border-radius:0 0 6px 6px; transition:background .3s; margin-top: -1px; }
+        .pin-num { font-size:16px; font-family: 'Courier New', Courier, monospace; margin-top:12px; font-weight: bold; color: #fff; }
 
         /* PIN COLORS */
         .pin.ok .pin-stem, .pin.ok .pin-foot { background:var(--ok); }
@@ -96,20 +97,26 @@
         .pin.damaged .pin-stem, .pin.damaged .pin-foot { background:var(--damaged); }
         .pin.damaged .pin-num { color:var(--damaged); }
         .pin.damaged .pin-stem { animation:blink 1.2s ease-in-out infinite; }
+        .pin.avlossnade .pin-stem { animation:blink 1.2s ease-in-out infinite; }
         .pin.avlossnade .pin-stem, .pin.avlossnade .pin-foot { background:var(--lost); }
         .pin.avlossnade .pin-num { color:var(--lost); }
         
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
         /* INFO BOX */
-        .info-box { background:#fff; border:1px solid #ddd; border-radius:12px; padding:20px; width:100%; max-width:600px; min-height:80px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .info-box { background: #fefcfcc8; border:1.7px solid #000000; border-radius:12px; padding:20px; width:100%; max-width:600px; min-height:80px; text-align: center; }
         .info-box .i-name { font-weight:bold; font-size:20px; color: #333; margin-bottom: 5px; }
         .info-box .i-status { font-size:16px; color: #666; }
         
         .btns { display:flex; gap:20px; align-items:center; }
-        button { padding: 14px 28px; border-radius: 8px; border: none; background: var(--brand); color: rgb(21, 0, 137); cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 10px rgba(13, 0, 251, 0.3); }
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2, 55, 248, 0.4); }
-        .ts { font-size:13px; color:#aaa; font-family: monospace; }
+        button { padding: 14px 28px; border-radius: 8px; border:1.7px solid #000000; background:#fefcfcc8; color: #333; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s; }
+        .ts { font-size:13px; color: #fefcfcc8; font-family: monospace; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(223, 226, 234, 0.17); }
+        .ts { font-size:13px; color: #e2dbdb; font-family: monospace; }
+        @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
     </style>
 </head>
 <body>
@@ -130,7 +137,7 @@
 
   <div class="chip-wrap">
     <div class="chip-body" id="chipBody">
-      <img src="static/ekobot_logo_horizontal_white_RGB.png" alt="Ekobot" class="chip-logo-img">
+      <img src="static/ekobotgreen.png" alt="Ekobot" class="chip-logo-img">
     </div>
     <div class="pins-row" id="pinsRow"></div>
   </div>
