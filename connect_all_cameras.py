@@ -37,6 +37,14 @@ def save_all_images():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
 
+    # Rensa gamla bilder innan nya sparas
+    for f in os.listdir(OUTPUT_DIR):
+        if f.endswith('.png'):
+            os.remove(os.path.join(OUTPUT_DIR, f))
+    rospy.loginfo("Gamla bilder raderade")
+
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+
     saved = []
     for camera_id in range(1, NUM_CAMERAS + 1):
         if camera_id in latest_images:
